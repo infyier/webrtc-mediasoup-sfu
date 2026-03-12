@@ -1,0 +1,53 @@
+button {
+  margin: 2px;
+}
+
+tr {
+  vertical-align: top;
+}
+
+video {
+  width: 360px;
+  background-color: black;
+  padding: 10px;
+  margin: 1px 1px;
+}
+
+.mainTable {
+  width: 100%;
+}
+
+.localColumn {
+  width: 246px;
+}
+
+.remoteColumn {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#localVideo {
+  width: 240px;
+}
+
+.remoteVideo {
+  float: left;
+}
+
+.videoWrap {
+  margin: 3px;
+  display: flex;
+  justify-content: center;
+}
+
+@media only screen and (max-width: 1060px) {
+  .video {
+    width: 300px;
+  }
+}
+
+@media only screen and (max-width: 940px) {
+  .video {
+    width: 240px;
+  }
+}

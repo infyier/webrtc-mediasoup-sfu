@@ -1,0 +1,45 @@
+# =========================
+# Node dependencies
+# =========================
+node_modules
+client/node_modules
+server/node_modules
+
+# =========================
+# Build outputs
+# =========================
+dist
+client/dist
+
+# =========================
+# SSL certificates (IMPORTANT)
+# =========================
+server/ssl
+*.pem
+*.key
+*.cert
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.local
+.env.development
+.env.production
+
+# =========================
+# Logs
+# =========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# OS / Editor files
+# =========================
+.DS_Store
+Thumbs.db
+.vscode
+.idea
