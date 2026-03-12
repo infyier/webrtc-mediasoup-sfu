@@ -1,9 +1,19 @@
 import "./App.css"
 import "./index.js"
 
+function generateRoom() {
+  const roomCode = Math.random().toString(36).substring(2, 8)
+  window.location.href = `/${roomCode}`
+}
+
 function App() {
   return (
     <div id="video">
+
+      <button onClick={generateRoom}>
+        Generate Room Code
+      </button>
+
       <table className="mainTable">
         <tbody>
           <tr>
@@ -17,6 +27,7 @@ function App() {
           </tr>
         </tbody>
       </table>
+
     </div>
   )
 }

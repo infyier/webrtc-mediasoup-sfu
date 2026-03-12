@@ -6,7 +6,7 @@ import * as mediasoupClient from "mediasoup-client"
 let roomName = window.location.pathname.slice(1)
 
 if (!roomName) {
-  roomName = Math.random().toString(36).substring(2, 8)
+  roomName = Math.random().toString(36).substring(2, 10)
   window.location.replace(`/${roomName}`)
 }
 
