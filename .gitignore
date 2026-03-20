@@ -2,19 +2,20 @@
 # Node dependencies
 # =========================
 node_modules
-client/node_modules
-server/node_modules
+frontend/node_modules
+backend/node_modules
 
 # =========================
 # Build outputs
 # =========================
 dist
-client/dist
+frontend/dist
+backend/dist
 
 # =========================
 # SSL certificates (IMPORTANT)
 # =========================
-server/ssl
+backend/certs
 *.pem
 *.key
 *.cert
