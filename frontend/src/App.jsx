@@ -1,34 +1,33 @@
 import "./App.css"
-import "./index.js"
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom"
+import Meeting from "./pages/Meeting"
 
-function generateRoom() {
-  const roomCode = Math.random().toString(36).substring(2, 8)
-  window.location.href = `/${roomCode}`
+function Landing() {
+  const navigate = useNavigate()
+
+  const generateRoom = () => {
+    const roomCode = Math.random().toString(36).substring(2, 8)
+    navigate(`/meeting/${roomCode}`)
+  }
+ 
+  return (
+    <div>
+      <h1>Landing Page</h1>
+      <button onClick={generateRoom}>
+        Generate Room Code
+      </button>
+    </div>
+  )
 }
 
 function App() {
   return (
-    <div id="video">
-
-      <button onClick={generateRoom}>
-        Generate Room Code
-      </button>
-
-      <table className="mainTable">
-        <tbody>
-          <tr>
-            <td className="localColumn">
-              <video id="localVideo" autoPlay className="video" muted></video>
-            </td>
-
-            <td className="remoteColumn">
-              <div id="videoContainer"></div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/meeting/:roomId" element={<Meeting />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
