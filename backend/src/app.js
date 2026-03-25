@@ -7,8 +7,8 @@ import mediasoup from 'mediasoup'
 import fs from 'fs'
 
 const options = {
-  key: fs.readFileSync('./ssl/key.pem', 'utf-8'),
-  cert: fs.readFileSync('./ssl/cert.pem', 'utf-8')
+  key: fs.readFileSync('./certs/key.pem', 'utf-8'),
+  cert: fs.readFileSync('./certs/cert.pem', 'utf-8')
 }
 
 const httpsServer = https.createServer(options, app)
@@ -163,16 +163,36 @@ connections.on('connection', async (socket) => {
     }
   }
 
-  socket.on('transport-connect', ({ dtlsParameters }) => {
+  socket.on('transport-connect', ({ dtlsParameters, transportId }) => {
     const { roomName } = peers[socket.id]
-    const transport = getTransport(roomName, socket.id, false)
+    const peer = rooms[roomName].peers[socket.id]
+    const transport = peer.transports.get(transportId)
+
+    if(!transport) {
+      console.error('Transport not found for socket:', socket.id)
+      return
+    }
 
     transport.connect({ dtlsParameters })
   })
 
-  socket.on('transport-produce', async ({ kind, rtpParameters }, callback) => {
-    const { roomName } = peers[socket.id]
-    const transport = getTransport(roomName, socket.id, false)
+  socket.on('transport-produce', async ({ kind, rtpParameters, transportId }, callback) => {
+    const peerData = peers[socket.id]
+
+    if (!peerData) {
+      console.log("peer not found, joinRoom not called yet")
+      return
+    }
+
+    const { roomName } = peerData
+    const peer = rooms[roomName].peers[socket.id]
+
+    const transport = peer.transports.get(transportId)
+
+    if (!transport) {
+      console.log("Transport not found for produce")
+      return
+    }
 
     const producer = await transport.produce({
       kind,
@@ -213,18 +233,34 @@ connections.on('connection', async (socket) => {
     }
   }
 
-  socket.on('transport-recv-connect', async ({ dtlsParameters }) => {
+  socket.on('transport-recv-connect', async ({ dtlsParameters, transportId }) => {
     const { roomName } = peers[socket.id]
-    const transport = getTransport(roomName, socket.id, true)
+    const peer = rooms[roomName].peers[socket.id]
+    const transport = peer.transports.get(transportId)
+    //const transport = getTransport(roomName, socket.id, true)
+
+    if(!transport) {
+      console.error('Transport not found for socket:', socket.id)
+      return
+    }
 
     await transport.connect({ dtlsParameters })
   })
 
-  socket.on('consume', async ({ rtpCapabilities, remoteProducerId }, callback) => {
+  socket.on('consume', async ({ rtpCapabilities, remoteProducerId, transportId }, callback) => {
     try {
-      const { roomName } = peers[socket.id]
+      const peerData = peers[socket.id]
+      if (!peerData) return
+      const { roomName } = peerData
+
       const router = rooms[roomName].router
-      const transport = getTransport(roomName, socket.id, true)
+      const peer = rooms[roomName].peers[socket.id]
+      const transport = peer.transports.get(transportId)
+
+      if (!transport) {
+        console.log("Transport not found for consume")
+        return
+      }
 
       if (!router.canConsume({ producerId: remoteProducerId, rtpCapabilities })) {
         return
