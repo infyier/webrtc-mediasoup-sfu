@@ -83,7 +83,13 @@ export const initSocket = () => {
   if (!videoEl) return;
 
   applyCameraOverlay(videoEl, cameraOff);
-});
+  });
+
+  socket.on("disconnect", () => {
+  console.log("Disconnected from server");
+
+  window.location.href = `/disconnected/${roomName}`;
+  });
 };
 
 let device
@@ -193,6 +199,11 @@ const createSendTransport = () => {
 
     producerTransport = device.createSendTransport(params)
 
+    producerTransport.on("connectionstatechange", (state) => {
+    if (state === "failed" || state === "disconnected") {
+      window.location.href = `/disconnected/${roomName}`;
+    }
+  }); 
     producerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
       try {
 
@@ -241,6 +252,12 @@ const createRecvTransport = () => {
     }
 
     consumerTransport = device.createRecvTransport(params)
+
+    consumerTransport.on("connectionstatechange", (state) => {
+      if (state === "failed" || state === "disconnected") {
+        window.location.href = `/disconnected/${roomName}`;
+      }
+    });
 
     consumerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
       try {

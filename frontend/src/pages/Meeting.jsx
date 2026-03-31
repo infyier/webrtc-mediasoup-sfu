@@ -21,6 +21,11 @@ export default function Meeting() {
       <div ref={containerRef}></div>
       <button onClick={toggleMute}>Mute</button>
       <button onClick={toggleCamera}>Camera</button>
+      <button onClick={() => {
+        window.location.href = `/disconnected/${roomId}`;
+        }}>
+          Leave Meeting
+      </button>
     </div>
   );
 }
