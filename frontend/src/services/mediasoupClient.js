@@ -307,9 +307,19 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
 }
 
 const getProducers = () => {
-  socket.emit('getProducers', producerIds => {
-    console.log(producerIds)
-    producerIds.forEach(signalNewConsumerTransport)
+  socket.emit('getProducers', (producers) => {
+    console.log(producers)
+
+    producers.forEach(({ id, cameraOff }) => {
+      signalNewConsumerTransport(id)
+
+      setTimeout(() => {
+        const videoEl = document.getElementById(id)
+        if (videoEl) {
+          applyCameraOverlay(videoEl, cameraOff)
+        }
+      }, 500)
+    })
   })
 }
 

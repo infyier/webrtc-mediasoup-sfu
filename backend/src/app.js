@@ -81,7 +81,7 @@ connections.on('connection', async (socket) => {
 
     if (peer) {
       peer.consumers.forEach(c => c.close())
-      peer.producers.forEach(p => p.close())
+      peer.producers.forEach(p => p.producer.close())
       peer.transports.forEach(t => t.close())
 
       delete room.peers[socket.id]
@@ -218,7 +218,11 @@ connections.on('connection', async (socket) => {
 
   const addProducer = (producer, roomName, socketId) => {
     const peer = rooms[roomName].peers[socketId]
-    peer.producers.set(producer.id, producer)
+    peer.producers.set(producer.id, {
+      producer,
+      cameraOff: false,
+      muted: false
+    });
   }
 
   const informConsumers = (roomName, socketId, producerId) => {
@@ -323,7 +327,10 @@ connections.on('connection', async (socket) => {
         const peer = room.peers[peerId]
 
         peer.producers.forEach(producer => {
-          producerList.push(producer.id)
+          producerList.push({
+            id: producer.producer.id,
+            cameraOff: producer.cameraOff || false
+          });
         })
       }
     }
@@ -335,22 +342,22 @@ connections.on('connection', async (socket) => {
   const { roomName } = peers[socket.id]
   const peer = rooms[roomName].peers[socket.id]
 
-  const producer = peer.producers.get(producerId)
+  const producerData = peer.producers.get(producerId)
 
-  if (producer) {
-    await producer.pause()
+  if (producerData) {
+    await producerData.producer.pause()   
     console.log("Producer paused:", producerId)
   }
-})
+  })
 
   socket.on("producer-resume", async ({ producerId }) => {
   const { roomName } = peers[socket.id]
   const peer = rooms[roomName].peers[socket.id]
 
-  const producer = peer.producers.get(producerId)
+  const producerData = peer.producers.get(producerId)
 
-  if (producer) {
-    await producer.resume()
+  if (producerData) {
+    await producerData.producer.resume()  
     console.log("Producer resumed:", producerId)
   }
   })
@@ -365,13 +372,20 @@ connections.on('connection', async (socket) => {
 })
 
   socket.on("user-camera", ({ producerId, cameraOff }) => {
-  const { roomName } = peers[socket.id]
+  const { roomName } = peers[socket.id];
+  const peer = rooms[roomName].peers[socket.id];
+
+  const producerData = peer.producers.get(producerId);
+  if (producerData) {
+    producerData.cameraOff = cameraOff;
+  }
 
   socket.broadcast.emit("user-camera", {
     producerId,
     cameraOff
-  })
-  })
+  });
+  });
+
 })
 
 const createWebRtcTransport = async (router) => {
