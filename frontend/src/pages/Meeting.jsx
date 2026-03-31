@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { initSocket, setRoomName, startMeeting } from "../services/mediasoupClient";
+import { initSocket, setRoomName, startMeeting, toggleMute, toggleCamera } from "../services/mediasoupClient";
 
 export default function Meeting() {
   const { roomId } = useParams();
@@ -15,8 +15,12 @@ export default function Meeting() {
 
   return (
     <div>
-      <video ref={videoRef} autoPlay muted />
+      <div className="video-container">
+        <video ref={videoRef} autoPlay muted />
+      </div>
       <div ref={containerRef}></div>
+      <button onClick={toggleMute}>Mute</button>
+      <button onClick={toggleCamera}>Camera</button>
     </div>
   );
 }

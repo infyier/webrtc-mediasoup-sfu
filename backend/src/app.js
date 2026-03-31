@@ -330,6 +330,48 @@ connections.on('connection', async (socket) => {
 
     callback(producerList)
   })
+
+  socket.on("producer-pause", async ({ producerId }) => {
+  const { roomName } = peers[socket.id]
+  const peer = rooms[roomName].peers[socket.id]
+
+  const producer = peer.producers.get(producerId)
+
+  if (producer) {
+    await producer.pause()
+    console.log("Producer paused:", producerId)
+  }
+})
+
+  socket.on("producer-resume", async ({ producerId }) => {
+  const { roomName } = peers[socket.id]
+  const peer = rooms[roomName].peers[socket.id]
+
+  const producer = peer.producers.get(producerId)
+
+  if (producer) {
+    await producer.resume()
+    console.log("Producer resumed:", producerId)
+  }
+  })
+
+  socket.on("user-muted", ({ producerId, muted }) => {
+  const { roomName } = peers[socket.id]
+
+  socket.broadcast.emit("user-muted", {
+    producerId,
+    muted
+  })
+})
+
+  socket.on("user-camera", ({ producerId, cameraOff }) => {
+  const { roomName } = peers[socket.id]
+
+  socket.broadcast.emit("user-camera", {
+    producerId,
+    cameraOff
+  })
+  })
 })
 
 const createWebRtcTransport = async (router) => {

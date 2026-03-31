@@ -2,6 +2,7 @@ let localVideo
 let videoContainer 
 let isProducing = false;
 let hasStarted = false;
+
 import { io } from "socket.io-client"
 import * as mediasoupClient from "mediasoup-client"
 
@@ -12,8 +13,34 @@ export const setRoomName = (roomId) => {
 
 let socket
 
+const applyCameraOverlay = (videoEl, cameraOff) => {
+  const container = videoEl.parentElement;
+
+  if (!container || !videoEl) return;
+
+  if (cameraOff) {
+    videoEl.style.visibility = "hidden";
+
+    let overlay = container.querySelector(".camera-off-overlay");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "camera-off-overlay";
+      overlay.innerText = "Camera Off";
+
+      container.appendChild(overlay);
+    }
+
+  } else {
+    videoEl.style.visibility = "visible";
+
+    const overlay = container.querySelector(".camera-off-overlay");
+    if (overlay) overlay.remove();
+  }
+};
+
 export const initSocket = () => {
-  socket = io("https://localhost:3000/mediasoup", {
+  socket = io("http://localhost:3000/mediasoup", {
     secure: true,
     rejectUnauthorized: false
   });
@@ -36,6 +63,27 @@ export const initSocket = () => {
     const elem = document.getElementById(`td-${remoteProducerId}`);
     if (elem) videoContainer.removeChild(elem);
   });
+
+  socket.on("user-muted", ({ producerId, muted }) => {
+  const videoEl = document.getElementById(producerId);
+
+  if (!videoEl) return;
+
+  if (muted) {
+    videoEl.muted = true;
+    videoEl.style.border = "3px solid red";
+  } else {
+    videoEl.muted = false;
+    videoEl.style.border = "";
+  }
+  });
+
+  socket.on("user-camera", ({ producerId, cameraOff }) => {
+  const videoEl = document.getElementById(producerId);
+  if (!videoEl) return;
+
+  applyCameraOverlay(videoEl, cameraOff);
+});
 };
 
 let device
@@ -45,7 +93,7 @@ let consumerTransport
 let audioProducer
 let videoProducer
 let consumer
-let isProducer = false
+//let isProducer = false
 
 let params = {
   encodings: [
@@ -121,7 +169,7 @@ const createDevice = async () => {
       routerRtpCapabilities: rtpCapabilities
     })
 
-    console.log('Device RTP Capabilities', device.rtpCapabilities)
+    console.log('Device RTP Capabilities', device.recvRtpCapabilities)
 
     createSendTransport()
 
@@ -273,6 +321,7 @@ const connectRecvTransport = async (remoteProducerId) => {
     }
     const newElem = document.createElement('div');
     newElem.setAttribute('id', `td-${remoteProducerId}`)
+    newElem.classList.add("video-container");
 
     if (params.kind === 'audio') {
       newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`
@@ -303,5 +352,48 @@ export const startMeeting = (roomId, videoElement, containerElement) => {
 
   socket.once('connection-success', () => {
     getLocalStream();
+  });
+};
+
+export const toggleMute = () => {
+  if (!audioProducer) return;
+
+  const muted = !audioProducer.paused;
+
+  if (audioProducer.paused) {
+    audioProducer.resume();
+    socket.emit("producer-resume", { producerId: audioProducer.id });
+    console.log("Unmuted");
+  } else {
+    audioProducer.pause();
+    socket.emit("producer-pause", { producerId: audioProducer.id });
+    console.log("Muted");
+  }
+  socket.emit("user-muted", {
+    producerId: audioProducer.id,
+    muted
+  });
+};
+
+export const toggleCamera = () => {
+  if (!videoProducer) return;
+
+  const cameraOff = !videoProducer.paused;
+
+  if (videoProducer.paused) {
+    videoProducer.resume();
+    socket.emit("producer-resume", { producerId: videoProducer.id });
+    console.log("Camera ON");
+  } else {
+    videoProducer.pause();
+    socket.emit("producer-pause", { producerId: videoProducer.id });
+    console.log("Camera OFF");
+  }
+  
+  applyCameraOverlay(localVideo, cameraOff);
+
+  socket.emit("user-camera", {
+    producerId: videoProducer.id,
+    cameraOff
   });
 };
