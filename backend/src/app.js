@@ -329,7 +329,8 @@ connections.on('connection', async (socket) => {
         peer.producers.forEach(producer => {
           producerList.push({
             id: producer.producer.id,
-            cameraOff: producer.cameraOff || false
+            cameraOff: producer.cameraOff || false,
+            muted: producer.muted || false
           });
         })
       }
@@ -364,6 +365,13 @@ connections.on('connection', async (socket) => {
 
   socket.on("user-muted", ({ producerId, muted }) => {
   const { roomName } = peers[socket.id]
+  const peer = rooms[roomName].peers[socket.id]
+
+  const producerData = peer.producers.get(producerId)
+
+  if (producerData) {
+    producerData.muted = muted  
+  }
 
   socket.broadcast.emit("user-muted", {
     producerId,

@@ -16,16 +16,20 @@ export default function Meeting() {
   return (
     <div>
       <div className="video-container">
-        <video ref={videoRef} autoPlay muted />
-      </div>
-      <div ref={containerRef}></div>
-      <button onClick={toggleMute}>Mute</button>
-      <button onClick={toggleCamera}>Camera</button>
-      <button onClick={() => {
-        window.location.href = `/disconnected/${roomId}`;
+      <video ref={videoRef} autoPlay muted />
+
+      <div className="video-controls">
+        <button onClick={toggleMute}>🔇</button>
+        <button onClick={toggleCamera}>📷</button>
+        <button onClick={() => {
+          window.location.href = `/disconnected/${roomId}`;
         }}>
-          Leave Meeting
-      </button>
+        ❌
+        </button>
+      </div>
     </div>
+
+  <div ref={containerRef}></div>
+  </div>
   );
 }
