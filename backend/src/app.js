@@ -1,5 +1,6 @@
 import express from "express";
 import fs from "node:fs";
+import os from "node:os";
 import httpolyglot from "httpolyglot";
 import mediasoup from "mediasoup";
 import { Server } from "socket.io";
@@ -38,15 +39,28 @@ const mediaCodecs = [
   },
 ];
 
-const worker = await mediasoup.createWorker({
-  rtcMinPort: config.mediasoup.rtcMinPort,
-  rtcMaxPort: config.mediasoup.rtcMaxPort,
-});
+const workers = [];
+let nextWorkerIdx = 0;
 
-worker.on("died", () => {
-  console.error("mediasoup worker died");
-  setTimeout(() => process.exit(1), 2000);
-});
+const numWorkers = os.cpus().length;
+for (let i = 0; i < numWorkers; i++) {
+  const w = await mediasoup.createWorker({
+    rtcMinPort: config.mediasoup.rtcMinPort,
+    rtcMaxPort: config.mediasoup.rtcMaxPort,
+  });
+  w.on("died", () => {
+    console.error(`mediasoup worker pid ${w.pid} died`);
+    setTimeout(() => process.exit(1), 2000);
+  });
+  workers.push(w);
+  console.log(`Spawned mediasoup worker pid ${w.pid} (${i + 1}/${numWorkers})`);
+}
+
+const getNextWorker = () => {
+  const worker = workers[nextWorkerIdx];
+  nextWorkerIdx = (nextWorkerIdx + 1) % workers.length;
+  return worker;
+};
 
 const createWebRtcTransport = async (router) => {
   const transport = await router.createWebRtcTransport({
@@ -100,7 +114,7 @@ connections.on("connection", (socket) => {
       if (previousRoomName) socket.leave(previousRoomName);
       store.removePeer(socket.id);
       const room = await store.ensureRoom(roomName, () =>
-        worker.createRouter({ mediaCodecs }),
+        getNextWorker().createRouter({ mediaCodecs }),
       );
       store.addPeer(roomName, socket, userName);
       socket.join(roomName);
@@ -423,5 +437,5 @@ connections.on("connection", (socket) => {
 
 server.listen(config.server.port, () => {
   console.log(`Server listening on port ${config.server.port}`);
-  console.log(`mediasoup worker pid ${worker.pid}`);
+  console.log(`${workers.length} mediasoup workers ready`);
 });

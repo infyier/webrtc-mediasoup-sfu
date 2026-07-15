@@ -44,3 +44,9 @@ yarn-error.log*
 Thumbs.db
 .vscode
 .idea
+
+# =========================
+# Agent Files
+# =========================
+.agents/
+.gemini/
