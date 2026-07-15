@@ -1,5 +1,5 @@
 import "./App.css"
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Meeting from "./pages/Meeting"
 import LandingPage from "./pages/LandingPage"
 import Disconnected from "./pages/Disconnected"
